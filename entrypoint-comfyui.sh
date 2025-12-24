@@ -78,7 +78,7 @@ mount_s3() {
         -o stat_cache_expire=900 \
         -o enable_noobj_cache \
         -o no_time_stamp_msg \
-        -f -o nonempty &  # Run in foreground but non-blocking, allow non-empty mount points
+        -f &  # Run in foreground but non-blocking
     local mount_pid=$!
     
     # Wait a moment for mount to complete
