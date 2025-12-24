@@ -61,7 +61,7 @@ mount_s3() {
     echo "${S3_ACCESS_KEY}:${S3_SECRET_KEY}" > /tmp/.s3fs-credentials
     chmod 600 /tmp/.s3fs-credentials
     
-    # Mount S3 bucket using s3fs
+    # Mount S3 bucket using s3fs (non-blocking with -f flag)
     # Format: s3fs bucket-name:path mount-point -o url=endpoint,use_path_request_style
     s3fs "${bucket_name}:${s3_path}" "$mount_point" \
         -o url="${S3_ENDPOINT}" \
@@ -70,18 +70,33 @@ mount_s3() {
         -o passwd_file=/tmp/.s3fs-credentials \
         -o use_cache=/tmp/s3fs-cache \
         -o ensure_diskfree=1000 \
-        -o retries=5 \
+        -o retries=3 \
         -o multipart_size=128 \
         -o parallel_count=5 \
         -o multireq_max=5 \
         -o max_stat_cache_size=100000 \
         -o stat_cache_expire=900 \
         -o enable_noobj_cache \
-        -o no_time_stamp_msg || {
+        -o no_time_stamp_msg \
+        -f -o nonempty &  # Run in foreground but non-blocking, allow non-empty mount points
+    local mount_pid=$!
+    
+    # Wait a moment for mount to complete
+    sleep 3
+    
+    # Check if mount succeeded
+    if mountpoint -q "$mount_point" 2>/dev/null; then
+        echo "S3 bucket mounted successfully at $mount_point"
+        rm -f /tmp/.s3fs-credentials
+        return 0
+    else
+        # Kill the mount process if it failed
+        kill $mount_pid 2>/dev/null || true
+        wait $mount_pid 2>/dev/null || true
         echo "Warning: Failed to mount S3 bucket. Continuing without S3 mount."
         rm -f /tmp/.s3fs-credentials
         return 1
-    }
+    fi
     
     rm -f /tmp/.s3fs-credentials
     
