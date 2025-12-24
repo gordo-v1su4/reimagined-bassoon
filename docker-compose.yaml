@@ -1,7 +1,10 @@
 services:
   comfyui:
-    # Use base image directly - no custom build needed
-    image: yanwk/comfyui-boot:cu126-slim
+    # Minimal build - just copies entrypoint script (avoids volume mount issues in Coolify)
+    build:
+      context: .
+      dockerfile: Dockerfile.comfyui
+    image: gordov1su4/comfyui:s3-support
     container_name: comfyui
     restart: unless-stopped
     init: true
@@ -19,13 +22,10 @@ services:
       - S3_USER_BUCKET=${S3_USER_BUCKET:-storage-user}
       - CLI_ARGS=
     volumes:
-      # Mount entrypoint script to override base image's entrypoint
-      - ./entrypoint-comfyui.sh:/custom-entrypoint.sh:ro
       # Storage - S3 will be mounted by entrypoint, these are fallback
       - ./storage:/root
       # Note: Model directories will be symlinked to S3 by entrypoint script
       # Local volumes are kept as fallback if S3 is not configured
-    entrypoint: ["/bin/bash", "/custom-entrypoint.sh"]
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8188/')\" || exit 1"]
       interval: 30s

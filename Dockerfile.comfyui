@@ -11,12 +11,12 @@ RUN zypper refresh && \
 RUN mkdir -p /mnt/s3-models /mnt/s3-hf-hub /mnt/s3-torch-hub /mnt/s3-input /mnt/s3-output /mnt/s3-workflows
 
 # Copy custom entrypoint script
-COPY entrypoint-comfyui.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY entrypoint-comfyui.sh /s3-entrypoint.sh
+RUN chmod +x /s3-entrypoint.sh
 
 # Expose ComfyUI port
 EXPOSE 8188
 
 # Set entrypoint
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/s3-entrypoint.sh"]
 
