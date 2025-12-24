@@ -140,27 +140,27 @@ if [ ! -z "$S3_ACCESS_KEY" ] && [ ! -z "$S3_SECRET_KEY" ]; then
     
     # Create folders in S3 buckets if they don't exist (using MinIO client)
     # Note: S3 doesn't have true folders, so we create placeholder files
+    # Reference: https://docs.min.io/enterprise/aistor-object-store/reference/cli/
     if command -v mc &> /dev/null; then
         echo "Creating S3 bucket folders if they don't exist..."
-        # Configure MinIO client alias - remove https:// prefix if present for alias
-        S3_ENDPOINT_CLEAN="${S3_ENDPOINT#https://}"
-        S3_ENDPOINT_CLEAN="${S3_ENDPOINT_CLEAN#http://}"
-        
-        if mc alias set s3 "https://${S3_ENDPOINT_CLEAN}" "${S3_ACCESS_KEY}" "${S3_SECRET_KEY}" >/dev/null 2>&1; then
+        # Configure MinIO client alias
+        # mc alias set <ALIAS> <YOUR-S3-ENDPOINT> <YOUR-ACCESS-KEY> <YOUR-SECRET-KEY>
+        if mc alias set s3 "${S3_ENDPOINT}" "${S3_ACCESS_KEY}" "${S3_SECRET_KEY}" --quiet >/dev/null 2>&1; then
             echo "MinIO client configured successfully"
-            # Create placeholder files to ensure folders exist (suppress output)
-            echo -n "" | mc pipe "s3/${S3_MODELS_BUCKET}/${S3_MODELS_PATH}/.keep" >/dev/null 2>&1 || true
-            echo -n "" | mc pipe "s3/${S3_MODELS_BUCKET}/hf-hub/.keep" >/dev/null 2>&1 || true
-            echo -n "" | mc pipe "s3/${S3_MODELS_BUCKET}/torch-hub/.keep" >/dev/null 2>&1 || true
-            echo -n "" | mc pipe "s3/${S3_USER_BUCKET}/input/.keep" >/dev/null 2>&1 || true
-            echo -n "" | mc pipe "s3/${S3_USER_BUCKET}/output/.keep" >/dev/null 2>&1 || true
-            echo -n "" | mc pipe "s3/${S3_USER_BUCKET}/workflows/.keep" >/dev/null 2>&1 || true
+            # Create placeholder files to ensure folders exist (S3 doesn't have folders, just prefixes)
+            # Using --quiet to suppress progress output
+            echo -n "" | mc pipe --quiet "s3/${S3_MODELS_BUCKET}/${S3_MODELS_PATH}/.keep" 2>/dev/null || true
+            echo -n "" | mc pipe --quiet "s3/${S3_MODELS_BUCKET}/hf-hub/.keep" 2>/dev/null || true
+            echo -n "" | mc pipe --quiet "s3/${S3_MODELS_BUCKET}/torch-hub/.keep" 2>/dev/null || true
+            echo -n "" | mc pipe --quiet "s3/${S3_USER_BUCKET}/input/.keep" 2>/dev/null || true
+            echo -n "" | mc pipe --quiet "s3/${S3_USER_BUCKET}/output/.keep" 2>/dev/null || true
+            echo -n "" | mc pipe --quiet "s3/${S3_USER_BUCKET}/workflows/.keep" 2>/dev/null || true
             echo "S3 bucket folders initialized"
         else
-            echo "Warning: Failed to configure MinIO client. Folders will be created on first write."
+            echo "Warning: Failed to configure MinIO client. Folders will be created on first write via s3fs."
         fi
     else
-        echo "Note: MinIO client (mc) not found. S3 folders will be created on first write."
+        echo "Note: MinIO client (mc) not found. S3 folders will be created on first write via s3fs."
     fi
     
     # Mount models directory from storage-models bucket
