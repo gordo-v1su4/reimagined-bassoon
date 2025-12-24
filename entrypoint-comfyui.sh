@@ -38,10 +38,18 @@ mount_s3() {
         # Format: bucket:path
         bucket_name="${s3_bucket_path%%:*}"
         s3_path="${s3_bucket_path#*:}"
+        # Ensure path starts with / for s3fs
+        if [[ ! "$s3_path" == /* ]]; then
+            s3_path="/${s3_path}"
+        fi
     else
         # Just path provided, use default models bucket
         bucket_name="${S3_MODELS_BUCKET}"
         s3_path="$s3_bucket_path"
+        # Ensure path starts with / for s3fs
+        if [[ ! "$s3_path" == /* ]]; then
+            s3_path="/${s3_path}"
+        fi
     fi
     
     echo "Mounting S3 bucket: ${bucket_name}:${s3_path} to $mount_point"
@@ -187,8 +195,10 @@ fi
 # Start ComfyUI using the base image's entrypoint script
 echo "Starting ComfyUI using base image entrypoint..."
 if [ -f "/runner-scripts/entrypoint.sh" ]; then
+    # Make sure it's executable
+    chmod +x /runner-scripts/entrypoint.sh 2>/dev/null || true
     # Use the base image's entrypoint which handles ComfyUI startup
-    exec /runner-scripts/entrypoint.sh
+    exec bash /runner-scripts/entrypoint.sh
 else
     # Fallback: try to start ComfyUI manually
     echo "Warning: Base image entrypoint not found, trying manual startup..."
