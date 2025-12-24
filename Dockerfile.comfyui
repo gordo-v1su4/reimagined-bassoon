@@ -1,0 +1,22 @@
+# Custom ComfyUI image with S3 mounting support
+FROM yanwk/comfyui-boot:cu126-slim
+
+# Install s3fs for S3 bucket mounting
+# Base image is openSUSE Tumbleweed, so use zypper
+RUN zypper refresh && \
+    (zypper install -y --no-recommends s3fs fuse psmisc || true) && \
+    zypper clean
+
+# Create directories for S3 mounts
+RUN mkdir -p /mnt/s3-models /mnt/s3-hf-hub /mnt/s3-torch-hub /mnt/s3-input /mnt/s3-output /mnt/s3-workflows
+
+# Copy custom entrypoint script
+COPY entrypoint-comfyui.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Expose ComfyUI port
+EXPOSE 8188
+
+# Set entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+

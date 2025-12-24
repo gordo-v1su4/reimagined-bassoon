@@ -1,5 +1,6 @@
 services:
   comfyui:
+    # Use base image directly - no custom build needed
     image: yanwk/comfyui-boot:cu126-slim
     container_name: comfyui
     restart: unless-stopped
@@ -18,13 +19,13 @@ services:
       - S3_USER_BUCKET=${S3_USER_BUCKET:-storage-user}
       - CLI_ARGS=
     volumes:
+      # Mount entrypoint script to override base image's entrypoint
+      - ./entrypoint-comfyui.sh:/custom-entrypoint.sh:ro
+      # Storage - S3 will be mounted by entrypoint, these are fallback
       - ./storage:/root
-      - ./storage-models/models:/root/ComfyUI/models
-      - ./storage-models/hf-hub:/root/.cache/huggingface/hub
-      - ./storage-models/torch-hub:/root/.cache/torch/hub
-      - ./storage-user/input:/root/ComfyUI/input
-      - ./storage-user/output:/root/ComfyUI/output
-      - ./storage-user/workflows:/root/ComfyUI/user/default/workflows
+      # Note: Model directories will be symlinked to S3 by entrypoint script
+      # Local volumes are kept as fallback if S3 is not configured
+    entrypoint: ["/bin/bash", "/custom-entrypoint.sh"]
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8188/')\" || exit 1"]
       interval: 30s
