@@ -35,6 +35,9 @@ services:
     security_opt:
       - "label=disable"
       - "seccomp=unconfined"
+    # Add FUSE device for s3fs mounting
+    devices:
+      - /dev/fuse:/dev/fuse
     deploy:
       resources:
         reservations:
