@@ -38,9 +38,8 @@ services:
     # Add FUSE device for s3fs mounting (required for S3 bucket mounting)
     devices:
       - /dev/fuse:/dev/fuse
-    # Privileged mode may be needed for FUSE in some environments (Coolify)
-    # Uncomment if FUSE still doesn't work:
-    # privileged: true
+    # Privileged mode needed for FUSE in Coolify
+    privileged: true
     deploy:
       resources:
         reservations:
