@@ -1,0 +1,67 @@
+services:
+  comfyui:
+    image: yanwk/comfyui-boot:cu126-slim
+    container_name: comfyui
+    restart: unless-stopped
+    init: true
+    ports:
+      - "8188:8188"  # ComfyUI (Coolify can override if needed)
+    environment:
+      - HF_HOME=/root/.cache/huggingface/hub
+      - HF_TOKEN=${HF_TOKEN}
+      - PYTHONUNBUFFERED=1
+      - S3_ENDPOINT=${S3_ENDPOINT:-https://minio-api.v1su4.com}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - S3_MODELS_BUCKET=${S3_MODELS_BUCKET:-storage-models}
+      - S3_MODELS_PATH=${S3_MODELS_PATH:-models}
+      - S3_USER_BUCKET=${S3_USER_BUCKET:-storage-user}
+      - CLI_ARGS=
+    volumes:
+      - ./storage:/root
+      - ./storage-models/models:/root/ComfyUI/models
+      - ./storage-models/hf-hub:/root/.cache/huggingface/hub
+      - ./storage-models/torch-hub:/root/.cache/torch/hub
+      - ./storage-user/input:/root/ComfyUI/input
+      - ./storage-user/output:/root/ComfyUI/output
+      - ./storage-user/workflows:/root/ComfyUI/user/default/workflows
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8188/')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    security_opt:
+      - "label=disable"
+      - "seccomp=unconfined"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+  swarmui:
+    image: gordov1su4/swarmui:v0.3.3
+    container_name: swarmui
+    restart: unless-stopped
+    depends_on:
+      - comfyui
+    ports:
+      - "7801:7801"
+    environment:
+      - WORKSPACE=/workspace
+      - COMFYUI_HOST=comfyui
+      - COMFYUI_PORT=8188
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - swarmui_data:/workspace/SwarmUI
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7801/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+volumes:
+  swarmui_data:
+    driver: local

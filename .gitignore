@@ -1,0 +1,56 @@
+# Docker
+*.log
+.dockerignore
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.env
+*.secret
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Models and outputs (keep structure, ignore large files)
+models/*
+!models/.gitkeep
+output/*
+!output/.gitkeep
+cache/*
+!cache/.gitkeep
+config/*
+!config/.gitkeep
+
+# Storage directories (created on host/Coolify, not in repo)
+storage/
+storage-models/
+storage-user/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+build.log
+
