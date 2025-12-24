@@ -10,6 +10,7 @@ Dockerized setup for SwarmUI and ComfyUI using the pre-built [ComfyUI Docker ima
 - **MinIO S3 Integration**: Models stored in S3 buckets
 - **Dockerized**: Two separate services (ComfyUI and SwarmUI)
 - **Coolify Ready**: Pre-configured for Coolify deployment
+- ****
 
 ## Architecture
 
