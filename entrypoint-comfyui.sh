@@ -138,6 +138,19 @@ trap cleanup SIGTERM SIGINT
 if [ ! -z "$S3_ACCESS_KEY" ] && [ ! -z "$S3_SECRET_KEY" ]; then
     echo "Setting up S3 mounts..."
     
+    # Create folders in S3 buckets if they don't exist (using MinIO client)
+    if command -v mc &> /dev/null; then
+        echo "Creating S3 bucket folders if they don't exist..."
+        mc alias set s3 "${S3_ENDPOINT}" "${S3_ACCESS_KEY}" "${S3_SECRET_KEY}" 2>/dev/null || true
+        # Create folders (they'll be created automatically when accessed, but this ensures they exist)
+        mc mb "s3/${S3_MODELS_BUCKET}/${S3_MODELS_PATH}" 2>/dev/null || true
+        mc mb "s3/${S3_MODELS_BUCKET}/hf-hub" 2>/dev/null || true
+        mc mb "s3/${S3_MODELS_BUCKET}/torch-hub" 2>/dev/null || true
+        mc mb "s3/${S3_USER_BUCKET}/input" 2>/dev/null || true
+        mc mb "s3/${S3_USER_BUCKET}/output" 2>/dev/null || true
+        mc mb "s3/${S3_USER_BUCKET}/workflows" 2>/dev/null || true
+    fi
+    
     # Mount models directory from storage-models bucket
     mount_s3 /mnt/s3-models "${S3_MODELS_BUCKET}:${S3_MODELS_PATH}" || true
     

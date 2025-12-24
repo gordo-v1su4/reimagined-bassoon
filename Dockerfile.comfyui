@@ -1,10 +1,12 @@
 # Custom ComfyUI image with S3 mounting support
 FROM yanwk/comfyui-boot:cu126-slim
 
-# Install s3fs for S3 bucket mounting
+# Install s3fs and MinIO client for S3 bucket mounting
 # Base image is openSUSE Tumbleweed, so use zypper
 RUN zypper refresh && \
-    (zypper install -y --no-recommends s3fs fuse psmisc || true) && \
+    (zypper install -y --no-recommends s3fs fuse psmisc wget || true) && \
+    wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc && \
+    chmod +x /usr/local/bin/mc && \
     zypper clean
 
 # Create directories for S3 mounts
