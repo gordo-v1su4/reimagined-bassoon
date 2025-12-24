@@ -198,7 +198,12 @@ if [ -f "/runner-scripts/entrypoint.sh" ]; then
     # Make sure it's executable
     chmod +x /runner-scripts/entrypoint.sh 2>/dev/null || true
     # Use the base image's entrypoint which handles ComfyUI startup
-    exec bash /runner-scripts/entrypoint.sh
+    # Use sh instead of bash if bash isn't available
+    if command -v bash &> /dev/null; then
+        exec bash /runner-scripts/entrypoint.sh
+    else
+        exec sh /runner-scripts/entrypoint.sh
+    fi
 else
     # Fallback: try to start ComfyUI manually
     echo "Warning: Base image entrypoint not found, trying manual startup..."

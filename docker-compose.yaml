@@ -71,3 +71,8 @@ services:
 volumes:
   swarmui_data:
     driver: local
+
+networks:
+  default:
+    name: swarmui-network
+    driver: bridge
